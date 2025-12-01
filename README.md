@@ -98,10 +98,13 @@ Then visit: `http://localhost:8000`
 ### Example Questions
 
 - "Show me top 10 customers with highest loan amounts"
-- "How many loans were disbursed in 2023?"
-- "What is the average interest rate?"
-- "List all active personal loans"
-- "Show customers from Mumbai"
+- "What is the product-wise total disbursement amount?"
+- "Show me branch-wise collection amounts"
+- "What is the total outstanding portfolio amount?"
+- "How many active loan accounts are there?"
+- "List all overdraft accounts with their current balances"
+- "What are the total repayments by account?"
+- "Show me product-wise loan count"
 
 ## 🎯 API Endpoints
 

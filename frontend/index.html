@@ -58,7 +58,7 @@
                     <div class="natural-language-wrapper">
                         <textarea 
                             id="questionInput" 
-                            placeholder="Ask anything about your data in plain English...&#10;&#10;Examples:&#10;• Show me top 10 customers with highest loan amounts&#10;• How many loans were disbursed in 2023?&#10;• What is the average interest rate?&#10;• List all active personal loans"
+                            placeholder="Ask anything about your data in plain English...&#10;&#10;Examples:&#10;• Show me top 10 customers with highest loan amounts&#10;• What is the product-wise total disbursement amount?&#10;• Show me branch-wise collection amounts&#10;• What is the total outstanding portfolio amount?&#10;• List all active loan accounts"
                             rows="8"
                             class="large-textarea"
                         ></textarea>
@@ -149,28 +149,34 @@
                 <div class="modal-body">
                     <div class="examples-list">
                         <div class="example-item" onclick="useExample(this)">
-                            Show me the first 10 loan accounts
+                            Show me top 10 customers with highest loan amounts
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            What is the product-wise total disbursement amount?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me branch-wise collection amounts
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            How many active loan accounts are there?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            What is the total outstanding portfolio amount?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me the first 10 loan accounts from financialForms
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            List all overdraft accounts with their current balances
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            What are the total repayments by account?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me product-wise loan count
                         </div>
                         <div class="example-item" onclick="useExample(this)">
                             How many loan accounts are there in total?
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            List all tables related to loans
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            Show me 5 jewel loans
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            What overdraft loan accounts exist?
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            How many tables are in the financialForms schema?
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            Show me all loan products available
-                        </div>
-                        <div class="example-item" onclick="useExample(this)">
-                            List the different types of loans in the database
                         </div>
                     </div>
                 </div>
