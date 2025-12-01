@@ -1,0 +1,61 @@
+
+# COMPREHENSIVE AI AGENT KNOWLEDGE BASE
+# Auto-generated from 274 production reports
+
+## CRITICAL TABLE RELATIONSHIPS
+
+### Customer → Loan (3-table join):
+```
+customers.customer_id = account_holders.customer_id
+account_holders.account_id = loan_od_working_registers.account_id
+```
+Alternative: `loan_accounts.customer_id = customer.id`
+
+### Product → Disbursement (2-table join):
+```
+loan_od_disbursements JOIN account_profiles 
+  ON (tenant_code = tenant_code AND account_id = account_id)
+account_profiles has product_code
+```
+
+### Branch → Hub:
+```
+branch_master.hub_id = hub_master.id
+```
+
+## MOST IMPORTANT TABLES (by usage)
+1. customer (perdix_db/financialforms) - 255 reports
+2. branch_master - 215 reports
+3. loan_accounts - 177 reports
+4. users - 76 reports
+5. loan_od_working_registers - 29 reports
+
+## COMMON AGGREGATIONS
+- **Amount calculations**: Use SUM(amount_magnitude) or SUM(principal_magnitude)
+- **Counts**: Use COUNT(DISTINCT account_id) for loans, COUNT(DISTINCT customer_id) for customers
+- **Latest records**: Use MAX(date_column) or subquery with MAX(id)
+
+## BUSINESS PATTERNS
+
+### Query Type: Product-wise Disbursement
+Tables: loan_od_disbursements, account_profiles
+Join: ON tenant_code AND account_id
+Group By: product_code
+Aggregate: SUM(amount_magnitude)
+
+### Query Type: Customer Outstanding
+Tables: customer, loan_accounts, loan_od_working_registers
+Join: customer_id linkage
+Aggregate: SUM(total_disbursed_magnitude) or SUM(principal_outstanding)
+
+### Query Type: Branch Collections
+Tables: branch_master, loan_repayment_details, loan_accounts
+Join: branch_id linkage
+Aggregate: SUM(repayment_amount)
+
+## KEY RULES
+1. **Amounts**: Usually in 'magnitude' columns (sometimes in paisa)
+2. **Composite Keys**: Many tables use (tenant_code, account_id) as composite key
+3. **Date Filters**: Most reports filter by date ranges on disbursement_date, transaction_date, value_date
+4. **Status Fields**: Check is_closed, status, current_stage for active records
+5. **Schema Mapping**: PERDIX_DB = financialforms, ENCORE_DB = encoredb in production reports

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loanlytics AI - Database Query Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- CodeMirror for SQL editor with autocomplete -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/sql-hint.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>🏦 Loanlytics AI</h1>
+                <p>Ask questions about your database in plain English</p>
+            </div>
+            <div class="status" id="status">
+                <span class="status-dot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="btn-action" onclick="listTables()">
+                    📋 View Tables
+                </button>
+                <button class="btn-action" onclick="showExamples()">
+                    💡 Examples
+                </button>
+                <button class="btn-action" onclick="toggleQueryMode()" id="modeToggle">
+                    🔧 Switch to SQL
+                </button>
+                <button class="btn-action" onclick="clearResults()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <!-- Query Input -->
+            <div class="query-section">
+                <!-- Mode Indicator -->
+                <div class="mode-indicator" id="modeIndicator">
+                    <span id="modeText">Natural Language Mode</span>
+                </div>
+                
+                <!-- Natural Language Input -->
+                <div class="input-container" id="naturalLanguageInput">
+                    <textarea 
+                        id="questionInput" 
+                        placeholder="Ask anything about your data... (e.g., 'Show me top 10 customers with highest loan amounts')"
+                        rows="3"
+                    ></textarea>
+                    <button class="btn-submit" onclick="askQuestion()">
+                        <span id="submitText">Ask Question</span>
+                        <span id="loader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+
+                <!-- Custom SQL Input -->
+                <div class="input-container" id="sqlInput" style="display: none;">
+                    <div class="sql-input-header">
+                        <span class="sql-badge">🔒 SELECT queries only</span>
+                        <span class="sql-help" onclick="showSQLHelp()">ℹ️ Help</span>
+                    </div>
+                    <div id="sqlEditorContainer" style="width: 100%;">
+                        <textarea 
+                            id="sqlQueryInput" 
+                            placeholder="Write your SQL query here... (e.g., SELECT product_code, SUM(amount_magnitude) AS total FROM encoredb.loan_od_disbursements GROUP BY product_code)"
+                            rows="12"
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+                    <button class="btn-submit" onclick="executeCustomSQL()">
+                        <span id="sqlSubmitText">Execute SQL</span>
+                        <span id="sqlLoader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <!-- SQL Query Display -->
+                <div class="sql-display">
+                    <div class="section-header">
+                        <h3>📝 Generated SQL Query</h3>
+                        <button class="btn-copy" onclick="copySQL()">Copy</button>
+                    </div>
+                    <pre id="sqlQuery" class="sql-code"></pre>
+                </div>
+
+                <!-- Results Table -->
+                <div class="results-display">
+                    <div class="section-header">
+                        <h3>📊 Results</h3>
+                        <button class="btn-export" onclick="exportToCSV()">Export CSV</button>
+                    </div>
+                    <div class="table-container">
+                        <div id="resultsTable"></div>
+                    </div>
+                    <div id="resultsCount" class="results-count"></div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorSection" class="error-section" style="display: none;">
+                <div class="error-content">
+                    <span class="error-icon">⚠️</span>
+                    <div>
+                        <h4>Error</h4>
+                        <p id="errorMessage"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tables Modal -->
+        <div id="tablesModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📋 Database Tables</h2>
+                    <button class="btn-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="tablesList" class="tables-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Modal -->
+        <div id="examplesModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>💡 Example Questions</h2>
+                    <button class="btn-close" onclick="closeExamplesModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="examples-list">
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me the first 10 loan accounts
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            How many loan accounts are there in total?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            List all tables related to loans
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me 5 jewel loans
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            What overdraft loan accounts exist?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            How many tables are in the financialForms schema?
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            Show me all loan products available
+                        </div>
+                        <div class="example-item" onclick="useExample(this)">
+                            List the different types of loans in the database
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
