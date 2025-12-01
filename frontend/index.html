@@ -55,15 +55,18 @@
                 
                 <!-- Natural Language Input -->
                 <div class="input-container" id="naturalLanguageInput">
-                    <textarea 
-                        id="questionInput" 
-                        placeholder="Ask anything about your data... (e.g., 'Show me top 10 customers with highest loan amounts')"
-                        rows="3"
-                    ></textarea>
-                    <button class="btn-submit" onclick="askQuestion()">
-                        <span id="submitText">Ask Question</span>
-                        <span id="loader" class="loader" style="display: none;"></span>
-                    </button>
+                    <div class="natural-language-wrapper">
+                        <textarea 
+                            id="questionInput" 
+                            placeholder="Ask anything about your data in plain English...&#10;&#10;Examples:&#10;• Show me top 10 customers with highest loan amounts&#10;• How many loans were disbursed in 2023?&#10;• What is the average interest rate?&#10;• List all active personal loans"
+                            rows="8"
+                            class="large-textarea"
+                        ></textarea>
+                        <button class="btn-submit" onclick="askQuestion()">
+                            <span id="submitText">🚀 Ask Question</span>
+                            <span id="loader" class="loader" style="display: none;"></span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Custom SQL Input -->
