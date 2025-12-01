@@ -135,9 +135,11 @@ class AIKnowledgeBase:
             "CRITICAL RULES:",
             "1. Customer→Loan: customers.customer_id = account_holders.customer_id, account_holders.account_id = loan_od_working_registers.account_id",
             "2. Product→Disbursement: loan_od_disbursements JOIN account_profiles ON (tenant_code AND account_id), then use product_code",
-            "3. Amounts: Use magnitude columns (amount_magnitude, principal_magnitude, total_disbursed_magnitude)",
-            "4. Composite Keys: Many tables use (tenant_code, account_id)",
-            "5. Active records: Check is_closed=0 or status='ACTIVE'"
+            "3. Repayment→Account: loan_od_repayments JOIN loan_od_working_registers ON (tenant_code AND account_id) - REPAYMENTS are in loan_od_repayments, NOT loan_od_disbursements!",
+            "4. Amounts: Use magnitude columns (amount_magnitude, principal_magnitude, total_disbursed_magnitude)",
+            "5. Composite Keys: Many tables use (tenant_code, account_id)",
+            "6. Active records: Check is_closed=0 or status='ACTIVE'",
+            "7. CRITICAL: loan_od_disbursements = DISBURSEMENTS only, loan_od_repayments = REPAYMENTS/COLLECTIONS - NEVER confuse these!"
         ]
         
         return "\n".join(critical_rules)
@@ -168,6 +170,9 @@ class AIKnowledgeBase:
         
         if 'customer' in question_lower and ('top' in question_lower or 'loan' in question_lower):
             enhancements.append("\nGUIDANCE: Use 3-table join: customer → account_holders → loan_od_working_registers")
+        
+        if 'repayment' in question_lower or ('collection' in question_lower and 'disbursement' not in question_lower):
+            enhancements.append("\nGUIDANCE: Use encoredb.loan_od_repayments for repayment/collection data, NOT loan_od_disbursements. Join with loan_od_working_registers ON (tenant_code AND account_id)")
         
         if enhancements:
             return question + "\n\n" + "\n".join(enhancements)

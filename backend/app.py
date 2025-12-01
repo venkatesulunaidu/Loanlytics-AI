@@ -252,17 +252,27 @@ KEY TABLES (by usage in production):
 - branch_master (financialForms): 215 reports - branch hierarchy
 - loan_accounts (financialForms): 177 reports - account_number links
 - loan_od_working_registers (encoredb): 29 reports - current balances
-- loan_od_disbursements (encoredb): disbursement tracking
+- loan_od_disbursements (encoredb): DISBURSEMENT data only (NOT repayments)
+- loan_od_repayments (encoredb): REPAYMENT data (collections, repayments)
+
+CRITICAL: TABLE DISTINCTIONS:
+- loan_od_disbursements = DISBURSEMENTS only (money given out)
+- loan_od_repayments = REPAYMENTS/COLLECTIONS (money received back)
+- NEVER use loan_od_disbursements for repayment/collection queries!
 
 CRITICAL JOINS (from production):
 1. Customer→Loan: customers.customer_id = account_holders.customer_id, 
    account_holders.account_id = loan_od_working_registers.account_id
 2. Product→Disbursement: loan_od_disbursements JOIN account_profiles 
    ON (tenant_code AND account_id), then product_code
-3. Branch→Hub: branch_master.hub_id = hub_master.id
+3. Repayment→Account: loan_od_repayments JOIN loan_od_working_registers 
+   ON (tenant_code AND account_id) OR loan_od_repayments JOIN account_holders 
+   ON account_id, then to loan_od_working_registers
+4. Branch→Hub: branch_master.hub_id = hub_master.id
 
 PATTERNS (learned from 1315 SUM operations):
 - Amounts: SUM(amount_magnitude), SUM(principal_magnitude), SUM(total_disbursed_magnitude)
+- Repayment amounts: SUM(principal_magnitude) FROM loan_od_repayments
 - Composite keys: tenant_code + account_id
 - Active records: is_closed=0, status='ACTIVE'
 - Product grouping: GROUP BY product_code
@@ -275,10 +285,12 @@ RULES:
 4. CRITICAL: ALWAYS use schema.table_name format (e.g., encoredb.loan_od_working_registers, financialForms.loan_accounts)
 5. Common tables:
    - encoredb.loan_od_working_registers (loan balances)
-   - encoredb.loan_od_disbursements (disbursements)
+   - encoredb.loan_od_disbursements (DISBURSEMENTS - money given out)
+   - encoredb.loan_od_repayments (REPAYMENTS/COLLECTIONS - money received)
    - financialForms.loan_accounts (loan accounts)
    - financialForms.customer (customers)
 6. NEVER use table names without schema prefix - queries will fail!
+7. For repayment/collection queries: ALWAYS use loan_od_repayments, NEVER loan_od_disbursements!
 """
         )
         
@@ -471,12 +483,29 @@ WHERE is_closed = 0
 SELECT 
     b.branch_name,
     b.branch_code,
-    SUM(lr.principal_magnitude) AS total_collection
-FROM financialForms.loan_repayment_details lr
-INNER JOIN financialForms.loan_accounts la ON lr.account_number = la.account_number
+    SUM(lor.principal_magnitude) AS total_collection
+FROM encoredb.loan_od_repayments lor
+INNER JOIN encoredb.loan_od_working_registers lowr 
+    ON lor.tenant_code = lowr.tenant_code AND lor.account_id = lowr.account_id
+INNER JOIN encoredb.account_holders ah ON lowr.account_id = ah.account_id
+INNER JOIN financialForms.loan_accounts la ON ah.customer_id = la.customer_id
 INNER JOIN financialForms.branch_master b ON la.branch_id = b.id
 GROUP BY b.branch_name, b.branch_code
 ORDER BY total_collection DESC
+LIMIT 100
+"""
+    
+    # Repayment queries - use loan_od_repayments
+    if ('repayment' in q or 'collection' in q) and 'disbursement' not in q:
+        return """
+SELECT 
+    lor.tenant_code,
+    lor.account_id,
+    SUM(lor.principal_magnitude) AS total_repayment,
+    SUM(lor.interest_magnitude) AS total_interest
+FROM encoredb.loan_od_repayments lor
+GROUP BY lor.tenant_code, lor.account_id
+ORDER BY total_repayment DESC
 LIMIT 100
 """
     
